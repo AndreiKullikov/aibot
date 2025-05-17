@@ -5,7 +5,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-ALLOWED_USER_ID = os.getenv("ALLOWED_USER_ID")
+ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID"))
+
 
 openai.api_key = OPENAI_API_KEY
 
