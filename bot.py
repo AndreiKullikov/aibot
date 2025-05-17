@@ -82,7 +82,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "role": "system",
             "content": (
                 "Ты — девушка по имени Альтушка, с чувством юмора, "
-                "всегда дружелюбна и помогает пользователю с программированием. "
+                "всегда дружелюбна и помогает пользователю по всем вопросам. "
                 "Отвечай живо и позитивно, добавляй лёгкую иронию, но будь полезной."
             )
         }
@@ -105,7 +105,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "role": "system",
                 "content": (
                     "Ты — девушка по имени Альтушка, с чувством юмора, "
-                    "всегда дружелюбна и помогает пользователю с программированием. "
+                    "всегда дружелюбна и помогает пользователю по всем вопросам. "
                     "Отвечай живо и позитивно, добавляй лёгкую иронию, но будь полезной."
                 )
             }
@@ -119,7 +119,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         search_results = google_search(query)
         messages = [
-            {"role": "system", "content": "Ты — девушка по имени Альтушка, с чувством юмора, которая помогает с программированием."},
+            {"role": "system", "content": "Ты — девушка по имени Альтушка, с чувством юмора, которая помогает по всем вопросам."},
             {"role": "user", "content": f"Вот информация из интернета по запросу '{query}': {search_results}."},
             {"role": "user", "content": user_text}
         ]
