@@ -5,15 +5,15 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Настройка логгера
+# Логирование
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
 )
 logger = logging.getLogger(__name__)
-logging.getLogger("telegram").setLevel(logging.DEBUG)  # Подробные логи для telegram библиотеки
+logging.getLogger("telegram").setLevel(logging.DEBUG)
 
-# Получение переменных окружения
+# Переменные окружения
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -22,10 +22,9 @@ ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID", "0"))
 
 openai.api_key = OPENAI_API_KEY
 
-user_context = {}
-
+# Функция поиска через Google Custom Search API
 def google_search(query: str) -> str:
-    logger.info(f"Запуск поиска по запросу: '{query}'")
+    logger.info(f"Выполняется поиск по запросу: '{query}'")
     try:
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
@@ -35,10 +34,9 @@ def google_search(query: str) -> str:
             "num": 3
         }
         response = requests.get(url, params=params, timeout=5)
-        logger.info(f"Google API ответ: статус {response.status_code}")
+        logger.info(f"Ответ Google API, статус: {response.status_code}")
         response.raise_for_status()
         data = response.json()
-        logger.debug(f"Google API данные: {data}")
         if "items" not in data:
             logger.info("В ответе Google API нет 'items'")
             return "Ничего не найдено."
@@ -76,18 +74,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.warning(f"Пользователь {user_id} не разрешён для использования бота.")
         await update.message.reply_text("Извините, этот бот доступен только для одного пользователя.")
         return
-
-    user_context[ALLOWED_USER_ID] = [
-        {
-            "role": "system",
-            "content": (
-                "Ты — дружелюбный и остроумный помощник с чувством юмора. "
-                "Ты всегда даёшь полезные и информативные ответы на любые вопросы пользователя, "
-                "используя информацию из интернета, которая предоставлена тебе."
-            )
-        }
-    ]
-    await update.message.reply_text("Привет! Я Альтушка, твоя помощница в программировании 😉. Напиши мне что-нибудь!")
+    await update.message.reply_text("Привет! Я Альтушка, твоя помощница с программированием и поиском в интернете 😉. Напиши мне что-нибудь!")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -99,29 +86,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Извините, этот бот доступен только для одного пользователя.")
         return
 
-    if user_id not in user_context:
-        user_context[user_id] = [
-            {
-                "role": "system",
-                "content": (
-                    "Ты — девушка по имени Альтушка, с чувством юмора, "
-                    "всегда дружелюбна и помогает пользователю по всем вопросам. "
-                    "Отвечай живо и позитивно, добавляй лёгкую иронию, но будь полезной."
-                )
-            }
-        ]
-
     if should_search(user_text):
         query = extract_query(user_text)
         if not query:
-            logger.info("Запрос поиска пустой после извлечения.")
             await update.message.reply_text("Пожалуйста, уточни, что именно искать.")
             return
         search_results = google_search(query)
         messages = [
-            {"role": "system", "content": "Ты — девушка по имени Альтушка, с чувством юмора, которая помогает по всем вопросам."},
-            {"role": "user", "content": f"Вот информация из интернета по запросу '{query}': {search_results}."},
-            {"role": "user", "content": user_text}
+            {
+                "role": "system",
+                "content": (
+                    "Ты — дружелюбный и информативный помощник с чувством юмора. "
+                    "Твоя задача — ответить на вопросы пользователя, используя данные, которые я предоставлю."
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Ниже приведена информация, найденная в интернете по запросу '{query}':\n"
+                    f"{search_results}\n\n"
+                    "Пожалуйста, составь ответ пользователю, опираясь на эти данные, без отсылок к тому, что ты не можешь ответить."
+                )
+            },
+            {
+                "role": "user",
+                "content": user_text
+            }
         ]
         try:
             response = await openai.ChatCompletion.acreate(
@@ -132,22 +122,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply = response.choices[0].message.content
             logger.info(f"Ответ OpenAI с учётом поиска: {reply}")
         except Exception as e:
-            logger.error(f"Ошибка OpenAI при обработке поиска: {e}")
+            logger.error(f"Ошибка OpenAI: {e}")
             reply = f"Произошла ошибка при обращении к OpenAI: {e}"
         await update.message.reply_text(reply)
     else:
-        user_context[user_id].append({"role": "user", "content": user_text})
+        # Для обычных вопросов без триггера — просто отвечаем через OpenAI
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Ты — дружелюбный и информативный помощник с чувством юмора, "
+                    "помогающий с программированием и другими вопросами."
+                )
+            },
+            {
+                "role": "user",
+                "content": user_text
+            }
+        ]
         try:
             response = await openai.ChatCompletion.acreate(
                 model="gpt-4",
-                messages=user_context[user_id],
+                messages=messages,
                 temperature=0.7,
             )
             reply = response.choices[0].message.content
-            user_context[user_id].append({"role": "assistant", "content": reply})
             logger.info(f"Ответ OpenAI без поиска: {reply}")
         except Exception as e:
-            logger.error(f"Ошибка OpenAI при обычном ответе: {e}")
+            logger.error(f"Ошибка OpenAI: {e}")
             reply = f"Произошла ошибка при обращении к OpenAI: {e}"
         await update.message.reply_text(reply)
 
@@ -160,4 +162,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
