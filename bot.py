@@ -16,25 +16,35 @@ openai.api_key = OPENAI_API_KEY
 user_context = {}
 
 def google_search(query):
-    url = "https://www.googleapis.com/customsearch/v1"
-    params = {
-        "key": GOOGLE_API_KEY,
-        "cx": SEARCH_ENGINE_ID,
-        "q": query,
-        "num": 3
-    }
-    response = requests.get(url, params=params)
-    data = response.json()
-    results = []
-    if "items" in data:
-        for item in data["items"]:
-            title = item.get("title")
-            snippet = item.get("snippet")
-            link = item.get("link")
-            results.append(f"{title}\n{snippet}\n{link}")
-    else:
-        return "Ничего не найдено."
-    return "\n\n".join(results)
+    print(f"Выполняется поиск по запросу: {query}")
+    try:
+        url = "https://www.googleapis.com/customsearch/v1"
+        params = {
+            "key": GOOGLE_API_KEY,
+            "cx": SEARCH_ENGINE_ID,
+            "q": query,
+            "num": 3
+        }
+        response = requests.get(url, params=params, timeout=5)
+        print(f"Статус ответа Google API: {response.status_code}")
+        response.raise_for_status()
+        data = response.json()
+        results = []
+        if "items" in data:
+            for item in data["items"]:
+                title = item.get("title")
+                snippet = item.get("snippet")
+                link = item.get("link")
+                results.append(f"{title}\n{snippet}\n{link}")
+            print(f"Найдено результатов: {len(results)}")
+            return "\n\n".join(results)
+        else:
+            print("В ответе нет ключа 'items'")
+            return "Ничего не найдено."
+    except Exception as e:
+        print(f"Ошибка при поиске: {e}")
+        return f"Ошибка при поиске: {e}"
+
 
 def should_search(text):
     triggers = ["найди", "поиск", "посмотри", "search", "где", "кто", "что такое"]
