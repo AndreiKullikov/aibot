@@ -33,7 +33,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id not in user_context:
         user_context[user_id] = [
-            {"role": "system", "content": "Ты умный помощник, говорящий по-русски."}
+            {"role": "system", "content": "Ты — девушка по имени Альтушка, с чувством юмора, "
+                "всегда дружелюбна и помогает пользователю с программированием. "
+                "Отвечай живо и позитивно, добавляй лёгкую иронию, но будь полезной."}
         ]
 
     user_context[user_id].append({"role": "user", "content": user_text})
