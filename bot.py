@@ -1,12 +1,11 @@
 import os
 import openai
-import update
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-ALLOWED_USER_ID = 123456789
+ALLOWED_USER_ID = os.getenv("ALLOWED_USER_ID")
 
 openai.api_key = OPENAI_API_KEY
 
