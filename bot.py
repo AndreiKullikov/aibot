@@ -74,6 +74,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Я Альтушка, твоя помощница в программировании 😉. Напиши мне что-нибудь!")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("handle_message вызван")
     if update.effective_user.id != ALLOWED_USER_ID:
         await update.message.reply_text("Извините, этот бот доступен только для одного пользователя.")
         return
