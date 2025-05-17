@@ -97,15 +97,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "role": "system",
                 "content": (
                     "Ты — дружелюбный и информативный помощник с чувством юмора. "
-                    "Твоя задача — на основе предоставленных данных из интернета давать максимально точные и конкретные ответы."
+                    "Отвечай строго и только на основе предоставленных данных. "
+                    "Не добавляй извинений и ограничений."
                 )
             },
             {
                 "role": "user",
                 "content": (
-                    f"Используй данные ниже, чтобы ответить на вопрос пользователя. "
-                    f"Данные по запросу '{query}':\n{search_results}\n"
-                    "Отвечай прямо и конкретно, не добавляй сомнений и отговорок."
+                    f"Информация по запросу '{query}':\n{search_results}\n"
+                    "Используй эти данные, чтобы дать прямой, точный ответ."
                 )
             },
             {
@@ -117,7 +117,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             response = await openai.ChatCompletion.acreate(
                 model="gpt-4",
                 messages=messages,
-                temperature=0.7,
+                temperature=0,
             )
             reply = response.choices[0].message.content
             logger.info(f"Ответ OpenAI с учётом поиска: {reply}")
@@ -144,7 +144,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             response = await openai.ChatCompletion.acreate(
                 model="gpt-4",
                 messages=messages,
-                temperature=0.7,
+                temperature=0,
             )
             reply = response.choices[0].message.content
             logger.info(f"Ответ OpenAI без поиска: {reply}")
